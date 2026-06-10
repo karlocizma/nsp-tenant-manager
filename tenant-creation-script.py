@@ -51,8 +51,11 @@ def refresh_tenants():
                     t.get("Name", ""),
                     t.get("PrimaryDomain", ""),
                     t.get("PrimaryContact", ""),
-                    t.get("NumberOfProtectionUsers", ""),
+                    t.get("NumberOfDisclaimerUsers", ""),
                     t.get("NumberOfEncryptionUsers", ""),
+                    t.get("NumberOfProtectionUsers", ""),
+                    t.get("NumberOfLargeFilesUsers", ""),
+                    t.get("NumberManagedCertificates", ""),
                 ))
                 label = f"{t.get('Name', '?')} (Id: {t.get('Id', '?')})"
                 _tenant_map[label] = t.get("Id", "")
@@ -291,7 +294,7 @@ def assign_roles():
 
 root = tk.Tk()
 root.title("NoSpamProxy Verwaltung")
-root.geometry("900x480")
+root.geometry("1000x480")
 
 notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True, padx=10, pady=10)
@@ -300,11 +303,13 @@ notebook.pack(fill="both", expand=True, padx=10, pady=10)
 tab_list = ttk.Frame(notebook)
 notebook.add(tab_list, text="Mandantenübersicht")
 
-columns = ("Id", "Name", "Primary Domain", "Primary Contact", "Protection Users", "Encryption Users")
+columns = ("Id", "Name", "Primary Domain", "Primary Contact", "Disclaimer", "Encryption", "Protection", "Large Files", "Certificates")
 tree = ttk.Treeview(tab_list, columns=columns, show="headings")
+col_widths = {"Id": 40, "Name": 100, "Primary Domain": 130, "Primary Contact": 150,
+              "Disclaimer": 75, "Encryption": 75, "Protection": 75, "Large Files": 75, "Certificates": 80}
 for col in columns:
     tree.heading(col, text=col)
-    tree.column(col, width=110)
+    tree.column(col, width=col_widths.get(col, 80))
 tree.pack(fill="both", expand=True, padx=5, pady=(5, 0))
 
 btn_frame = ttk.Frame(tab_list)

@@ -114,6 +114,7 @@ def create_tenant():
         f'-NumberOfProtectionUsers {protection_users} '
         f'-NumberOfLargeFilesUsers {largefiles_users} '
         f'-NumberManagedCertificates {managed_certificates} '
+        f'-NumberOfSandboxFiles 0 '
         f'-PrimaryDomainIsVerified'
     )
 

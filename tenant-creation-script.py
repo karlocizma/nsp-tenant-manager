@@ -291,7 +291,7 @@ def assign_roles():
 
 root = tk.Tk()
 root.title("NoSpamProxy Verwaltung")
-root.geometry("750x480")
+root.geometry("900x480")
 
 notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True, padx=10, pady=10)
@@ -321,23 +321,24 @@ tab_create = ttk.Frame(notebook)
 notebook.add(tab_create, text="Mandant erstellen")
 
 form_fields = [
-    ("Tenant Name *",        "entry_tenant_name",        ""),
-    ("Primary Domain *",     "entry_primary_domain",     ""),
-    ("Primary Contact *",    "entry_primary_contact",    ""),
-    ("Disclaimer Users",     "entry_disclaimer_users",   "0"),
-    ("Encryption Users",     "entry_encryption_users",   "0"),
-    ("Protection Users",     "entry_protection_users",   "0"),
-    ("Large Files Users",    "entry_largefiles_users",   "0"),
-    ("Managed Certificates", "entry_managed_certificates", "0"),
+    ("Tenant Name *",        "entry_tenant_name",          "",  "Keine Leerzeichen erlaubt"),
+    ("Primary Domain *",     "entry_primary_domain",       "",  "z.B. firma.de"),
+    ("Primary Contact *",    "entry_primary_contact",      "",  "E-Mail-Adresse des Ansprechpartners"),
+    ("Disclaimer Users",     "entry_disclaimer_users",     "0", "Nutzer mit E-Mail-Signatur"),
+    ("Encryption Users",     "entry_encryption_users",     "0", "Nutzer mit S/MIME-Verschlüsselung"),
+    ("Protection Users",     "entry_protection_users",     "0", "Nutzer mit Spam- und Virenschutz"),
+    ("Large Files Users",    "entry_largefiles_users",     "0", "Nutzer für große Dateiübertragungen"),
+    ("Managed Certificates", "entry_managed_certificates", "0", "Entspricht i.d.R. den Protection-Nutzern"),
 ]
 
 _entries = {}
-for i, (label, name, default) in enumerate(form_fields):
+for i, (label, name, default, hint) in enumerate(form_fields):
     ttk.Label(tab_create, text=label).grid(row=i, column=0, sticky="e", padx=10, pady=4)
     e = ttk.Entry(tab_create, width=32)
     if default:
         e.insert(0, default)
     e.grid(row=i, column=1, padx=10, pady=4, sticky="w")
+    ttk.Label(tab_create, text=hint, foreground="gray").grid(row=i, column=2, sticky="w", padx=(0, 10))
     _entries[name] = e
 
 entry_tenant_name        = _entries["entry_tenant_name"]
@@ -397,24 +398,31 @@ combo_tenant_lic = ttk.Combobox(tab_lic, width=34, state="readonly")
 combo_tenant_lic.grid(row=0, column=1, padx=10, pady=6, sticky="w")
 combo_tenant_lic.bind("<<ComboboxSelected>>", on_license_tenant_selected)
 
+ttk.Label(
+    tab_lic,
+    text="Immer die Gesamtanzahl angeben, nicht nur die Änderung!",
+    foreground="orange"
+).grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 6))
+
 lic_fields = [
-    ("Disclaimer Users",     "NumberOfDisclaimerUsers"),
-    ("Encryption Users",     "NumberOfEncryptionUsers"),
-    ("Protection Users",     "NumberOfProtectionUsers"),
-    ("Large Files Users",    "NumberOfLargeFilesUsers"),
-    ("Managed Certificates", "NumberManagedCertificates"),
+    ("Disclaimer Users",     "NumberOfDisclaimerUsers",  "Nutzer mit E-Mail-Signatur"),
+    ("Encryption Users",     "NumberOfEncryptionUsers",  "Nutzer mit S/MIME-Verschlüsselung"),
+    ("Protection Users",     "NumberOfProtectionUsers",  "Nutzer mit Spam- und Virenschutz"),
+    ("Large Files Users",    "NumberOfLargeFilesUsers",  "Nutzer für große Dateiübertragungen"),
+    ("Managed Certificates", "NumberManagedCertificates","Entspricht i.d.R. den Protection-Nutzern"),
 ]
 
 lic_entries = {}
-for i, (label, key) in enumerate(lic_fields, start=1):
+for i, (label, key, hint) in enumerate(lic_fields, start=2):
     ttk.Label(tab_lic, text=label + ":").grid(row=i, column=0, padx=10, pady=4, sticky="e")
     e = ttk.Entry(tab_lic, width=12)
     e.insert(0, "0")
     e.grid(row=i, column=1, padx=10, pady=4, sticky="w")
+    ttk.Label(tab_lic, text=hint, foreground="gray").grid(row=i, column=2, sticky="w", padx=(0, 10))
     lic_entries[key] = e
 
 btn_adjust = ttk.Button(tab_lic, text="Lizenzen anpassen", command=adjust_licenses)
-btn_adjust.grid(row=len(lic_fields) + 1, column=0, columnspan=2, pady=12)
+btn_adjust.grid(row=len(lic_fields) + 2, column=0, columnspan=3, pady=12)
 
 refresh_tenants()
 root.mainloop()

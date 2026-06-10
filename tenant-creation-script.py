@@ -6,7 +6,8 @@ import threading
 
 NSP_CONNECT = "connect-nsp -IgnoreServerCertificateErrors; "
 
-_tenant_map = {}  # display label -> tenant Id
+_tenant_map = {}   # display label -> tenant Id
+_tenant_data = {}  # display label -> full tenant dict
 
 
 def run_powershell(script, callback):
@@ -43,6 +44,7 @@ def refresh_tenants():
             if isinstance(data, dict):
                 data = [data]
             _tenant_map.clear()
+            _tenant_data.clear()
             for t in data:
                 tree.insert("", "end", values=(
                     t.get("Id", ""),
@@ -54,9 +56,13 @@ def refresh_tenants():
                 ))
                 label = f"{t.get('Name', '?')} (Id: {t.get('Id', '?')})"
                 _tenant_map[label] = t.get("Id", "")
-            combo_tenant["values"] = list(_tenant_map.keys())
-            if _tenant_map:
+                _tenant_data[label] = t
+            labels = list(_tenant_map.keys())
+            combo_tenant["values"] = labels
+            combo_tenant_lic["values"] = labels
+            if labels:
                 combo_tenant.current(0)
+                combo_tenant_lic.current(0)
         except json.JSONDecodeError:
             messagebox.showerror("Fehler", "Mandantenliste konnte nicht gelesen werden.")
 
@@ -145,6 +151,56 @@ def add_whitelist_ip():
         NSP_CONNECT + f"New-NspWhitelistedIP {ip}",
         lambda out, err: root.after(0, on_done, out, err)
     )
+
+
+# --- License Adjustment ---
+
+def on_license_tenant_selected(event=None):
+    label = combo_tenant_lic.get()
+    if label not in _tenant_data:
+        return
+    t = _tenant_data[label]
+    for key, entry in lic_entries.items():
+        entry.delete(0, tk.END)
+        entry.insert(0, str(t.get(key, 0)))
+
+
+def adjust_licenses():
+    label = combo_tenant_lic.get()
+    if not label:
+        messagebox.showerror("Fehler", "Bitte einen Mandanten auswählen.")
+        return
+
+    tenant_id = _tenant_map[label]
+    values = {}
+    for key, entry in lic_entries.items():
+        val = entry.get().strip()
+        if not val.isdigit():
+            messagebox.showerror("Fehler", f"{key} muss eine ganze Zahl sein.")
+            return
+        values[key] = val
+
+    btn_adjust.config(state="disabled")
+
+    script = (
+        f"{NSP_CONNECT}"
+        f"Set-NspTenant -Id {tenant_id}"
+        f" -NumberOfDisclaimerUsers {values['NumberOfDisclaimerUsers']}"
+        f" -NumberOfEncryptionUsers {values['NumberOfEncryptionUsers']}"
+        f" -NumberOfProtectionUsers {values['NumberOfProtectionUsers']}"
+        f" -NumberOfLargeFilesUsers {values['NumberOfLargeFilesUsers']}"
+        f" -NumberManagedCertificates {values['NumberManagedCertificates']}"
+    )
+
+    def on_done(output, error):
+        btn_adjust.config(state="normal")
+        if error:
+            messagebox.showerror("Fehler", f"Fehler beim Anpassen der Lizenzen:\n{error}")
+        else:
+            messagebox.showinfo("Erfolg", "Lizenzen wurden erfolgreich angepasst.")
+            refresh_tenants()
+
+    run_powershell(script, lambda out, err: root.after(0, on_done, out, err))
 
 
 # --- User Role Assignment ---
@@ -290,6 +346,34 @@ for role in ROLES:
 
 btn_assign = ttk.Button(tab_roles, text="Rollen zuweisen", command=assign_roles)
 btn_assign.grid(row=3, column=0, columnspan=2, pady=12)
+
+# Tab 5: License adjustment
+tab_lic = ttk.Frame(notebook)
+notebook.add(tab_lic, text="Lizenzen")
+
+ttk.Label(tab_lic, text="Mandant:").grid(row=0, column=0, padx=10, pady=6, sticky="e")
+combo_tenant_lic = ttk.Combobox(tab_lic, width=34, state="readonly")
+combo_tenant_lic.grid(row=0, column=1, padx=10, pady=6, sticky="w")
+combo_tenant_lic.bind("<<ComboboxSelected>>", on_license_tenant_selected)
+
+lic_fields = [
+    ("Disclaimer Users",     "NumberOfDisclaimerUsers"),
+    ("Encryption Users",     "NumberOfEncryptionUsers"),
+    ("Protection Users",     "NumberOfProtectionUsers"),
+    ("Large Files Users",    "NumberOfLargeFilesUsers"),
+    ("Managed Certificates", "NumberManagedCertificates"),
+]
+
+lic_entries = {}
+for i, (label, key) in enumerate(lic_fields, start=1):
+    ttk.Label(tab_lic, text=label + ":").grid(row=i, column=0, padx=10, pady=4, sticky="e")
+    e = ttk.Entry(tab_lic, width=12)
+    e.insert(0, "0")
+    e.grid(row=i, column=1, padx=10, pady=4, sticky="w")
+    lic_entries[key] = e
+
+btn_adjust = ttk.Button(tab_lic, text="Lizenzen anpassen", command=adjust_licenses)
+btn_adjust.grid(row=len(lic_fields) + 1, column=0, columnspan=2, pady=12)
 
 refresh_tenants()
 root.mainloop()

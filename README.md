@@ -1,6 +1,6 @@
 # NoSpamProxy Tenant Manager
 
-A Python GUI application for managing NoSpamProxy tenants. Allows you to view, create, and configure tenants, assign user roles, and manage whitelisted IPs — without writing PowerShell manually.
+A Python GUI application for managing NoSpamProxy tenants. Allows you to view, create, and configure tenants, adjust licenses, assign user roles, and manage whitelisted IPs — without writing PowerShell manually.
 
 ## Requirements
 
@@ -79,6 +79,18 @@ On success the form clears and the roles are ready to assign to another user.
 
 ---
 
+### Lizenzen (License Adjustment)
+
+Adjusts the license counts for an existing tenant using `Set-NspTenant`.
+
+1. Select the tenant from the dropdown — the fields auto-fill with the current values.
+2. Change any counts as needed.
+3. Click **Lizenzen anpassen**.
+
+The tenant list refreshes automatically after a successful update.
+
+---
+
 ## PowerShell commands used
 
 | Action | Command |
@@ -86,5 +98,6 @@ On success the form clears and the roles are ready to assign to another user.
 | Connect | `connect-nsp -IgnoreServerCertificateErrors` |
 | List tenants | `Get-NspTenant` |
 | Create tenant | `New-NspTenant` |
+| Adjust licenses | `Set-NspTenant` |
 | Assign role | `New-NspUserRoleAssignment` |
 | Add whitelisted IP | `New-NspWhitelistedIP` |

@@ -153,6 +153,40 @@ def add_whitelist_ip():
     )
 
 
+# --- Delete Tenant ---
+
+def delete_tenant():
+    selected = tree.selection()
+    if not selected:
+        messagebox.showerror("Fehler", "Bitte einen Mandanten in der Liste auswählen.")
+        return
+
+    values = tree.item(selected[0], "values")
+    tenant_id, tenant_name = values[0], values[1]
+
+    confirmed = messagebox.askyesno(
+        "Mandant löschen",
+        f"Mandant '{tenant_name}' (Id: {tenant_id}) wirklich löschen?\nDiese Aktion kann nicht rückgängig gemacht werden."
+    )
+    if not confirmed:
+        return
+
+    btn_delete.config(state="disabled")
+
+    def on_done(output, error):
+        btn_delete.config(state="normal")
+        if error:
+            messagebox.showerror("Fehler", f"Fehler beim Löschen des Mandanten:\n{error}")
+        else:
+            messagebox.showinfo("Erfolg", f"Mandant '{tenant_name}' wurde gelöscht.")
+            refresh_tenants()
+
+    run_powershell(
+        NSP_CONNECT + f"Remove-NspTenant -Id {tenant_id}",
+        lambda out, err: root.after(0, on_done, out, err)
+    )
+
+
 # --- License Adjustment ---
 
 def on_license_tenant_selected(event=None):
@@ -272,8 +306,14 @@ for col in columns:
     tree.column(col, width=110)
 tree.pack(fill="both", expand=True, padx=5, pady=(5, 0))
 
-btn_refresh = ttk.Button(tab_list, text="Aktualisieren", command=refresh_tenants)
-btn_refresh.pack(pady=6)
+btn_frame = ttk.Frame(tab_list)
+btn_frame.pack(pady=6)
+
+btn_refresh = ttk.Button(btn_frame, text="Aktualisieren", command=refresh_tenants)
+btn_refresh.pack(side="left", padx=4)
+
+btn_delete = ttk.Button(btn_frame, text="Mandant löschen", command=lambda: delete_tenant())
+btn_delete.pack(side="left", padx=4)
 
 # Tab 2: Create tenant
 tab_create = ttk.Frame(notebook)

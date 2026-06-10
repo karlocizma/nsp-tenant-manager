@@ -29,8 +29,9 @@ On startup the application connects to NoSpamProxy via `connect-nsp -IgnoreServe
 Displays all existing tenants with their Id, Name, Primary Domain, Primary Contact, and license counts for Protection Users and Encryption Users.
 
 - **Aktualisieren** — reloads the list from NoSpamProxy.
+- **Mandant löschen** — select a row in the list and click this button. A confirmation dialog appears before anything is deleted.
 
-The list refreshes automatically after a new tenant is created.
+The list refreshes automatically after a tenant is created or deleted.
 
 ---
 
@@ -98,6 +99,7 @@ The tenant list refreshes automatically after a successful update.
 | Connect | `connect-nsp -IgnoreServerCertificateErrors` |
 | List tenants | `Get-NspTenant` |
 | Create tenant | `New-NspTenant` |
+| Delete tenant | `Remove-NspTenant` |
 | Adjust licenses | `Set-NspTenant` |
 | Assign role | `New-NspUserRoleAssignment` |
 | Add whitelisted IP | `New-NspWhitelistedIP` |
